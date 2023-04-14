@@ -27,22 +27,22 @@ def generate_launch_description():
         get_package_share_directory('ros2_serial_example'), 'config')
 
     param_config = os.path.join(ros2_serial_example_directory,
-                                'default_ros2_to_serial_bridge_params.yaml')
+                                'ros2_to_serial_bridge_params.yaml')
 
     with open(param_config, 'r') as f:
-        params = yaml.safe_load(f)['iris_0/ros2_to_serial_bridge']['ros__parameters']
+        params = yaml.safe_load(f)['ro45/ros2_to_serial_bridge']['ros__parameters']
 
     print(params)
 
     container = ComposableNodeContainer(
-            node_name='componsable_drone_node',
-            node_namespace='/iris_0',
+            node_name='node_name',
+            node_namespace='/ro45',
             package='rclcpp_components',
             node_executable='component_container',
             composable_node_descriptions=[
                 ComposableNode(
                     node_name='ros2_to_serial_bridge',
-                    node_namespace='/iris_0',
+                    node_namespace='/ro45',
                     package='ros2_serial_example',
                     node_plugin='ros2_to_serial_bridge::ROS2ToSerialBridge',
                     parameters=[params]),
