@@ -1,6 +1,40 @@
-# ROS 2 serial bridge
+# RO45 ROS2-Pickrobot Serial bridge
+This is for the RO45 project, adapted from [ros2_serial_example](https://github.com/osrf/ros2_serial_example).
+Tested in ROS2 Humble.
 
-## Purpose
+The code enables to send robot commands from the ROS2 network to the pickrobot via the attached Arduino and receive position messages from the robot via the attached esp32 board.
+
+## Usage
+### Dependencies
+ROS2
+- [RO45 portal robot interface package](https://github.com/matl-hsk/ro45_portalrobot_interfaces)
+
+Microcontroller (Pickrobot)
+- [code for pickrobot actuators](https://github.com/matl-hsk/PickRobotRosSerial)
+- [code for pickrobot sensors](https://github.com/matl-hsk/PlotbotEncoderRosSerial)
+
+
+### Build
+1. Make sure the dependencies are met, in particular the package `ro45_portalrobot_interfaces` is in your ROS2 workspace.
+1. Source your ROS2 underlay.
+1. Open a terminal at your ROS2 workspace and build this package including dependencies `colcon build --packages-up-to ro45_ros2_pickrobot_serial`.
+
+### Run
+1. Make sure the Arduino and esp boards are connected and available at `/dev/ttyACM0` and `/dev/ttyUSB0`, respectively. (If the port names are different, you need to adapt the file `install/ro45_ros2_pickrobot_serial/share/ro45_ros2_pickrobot_serial/config/ro45_params.yaml` or override the parameter manually.)
+1. Source the ROS2 overlay `source ./install/setup.bash`
+1. Launch the nodes using one of the provided launch files
+  - `ros2 launch ro45_ros2_pickrobot_serial launch_nodes.py` to launch two separate nodes for the communication to and from the robot.
+  - `ros2 launch ro45_ros2_pickrobot_serial launch_in_container.py` to launch both within a container.
+
+--- 
+--- 
+--- 
+
+# Original Readme
+
+## ROS 2 serial bridge
+
+### Purpose
 
 This repository aims to provide a starting point (and possibly canonical version) of a serial <-> ROS 2 bridge.  The aim of the bridge is to take data to and from a serial port, and present that data on a ROS 2 network.
 
@@ -14,17 +48,17 @@ As of this writing (2019-03-22), there are several other projects in this space:
 
 This project was originally forked out of px4_ros_com, but has since been heavily modified.
 
-## Theory of operation
+### Theory of operation
 
 The serial-to-ROS 2 bridge contained in this repository (as the `ros2_to_serial_bridge` binary) defines serial framing protocols (the details of which are explained further in [Serial Framing Protocol](#Serial-Framing-Protocol).  Data that is properly framed coming *from* the serial port is unpacked and sent onto the ROS 2 network.  Conversely, data coming from the ROS 2 network is properly framed and sent *to* the serial port.  In all cases, the goal is to keep the amount of code on the other end of the serial port low so that this can be used to talk to embedded devices.
 
 To keep the overhead of the serial framing low, there is a fixed-size "topic_ID" sent and received as part of the serial framing protocol.  This "topic_ID" represents a (topic name,topic type) tuple on the ROS 2 network.  By default, the "topic_ID" size is one byte, with 0 and 1 reserved, so that the maximum number of (topic_name,topic_type) tuples on any one bridge is 253.  There is a typedef in the code to increase this, but note that changing this will break serial wire compatibility.  The mapping of topic_ID -> (topic_name,topic_type) is discussed in the next section.
 
-## Topic ID to name and type
+### Topic ID to name and type
 
 As stated above, the bridge needs to know the mapping of topic IDs to the (topic_name,topic_type) tuple.  It can get this information either via a static YAML configuration file, or dynamically by querying the other side of the serial port.
 
-### Static YAML configuration
+#### Static YAML configuration
 
 If static YAML configuration is configured, then the topic ID -> (topic_name,topic_type) mapping comes from the file passed to the `ros2_serial_bridge` on the command line.  Static YAML configuration can be requested by setting the `dynamic_serial_mapping_ms` key in the YAML file to -1.  If static YAML configuration is configured, then no dynamic mapping is applied.
 
@@ -41,17 +75,17 @@ There's a top-level `topics` key, and under that are topic mappings of the form:
 
 Data coming from the serial port with topic_ID `<serial_byte_mapping>` with direction `SerialToROS2` will be published on the ROS 2 network on topic `<topic_name>` with type `<ROS2_type_mapping>`.  Data coming from the ROS 2 network on topic `topic_name` with direction `ROS2ToSerial` with type `<ROS2_type_mapping>` will be framed onto the serial port with mapping `<serial_byte_mapping>`.  For maximum disambiguation, a topic_ID is exclusively either `SerialToROS2` or `ROS2ToSerial`.  This isn't a fundamental requirement of the protocol, so it could be lifted if necessary.
 
-### Dynamic topic mapping
+#### Dynamic topic mapping
 
 If dynamic topic mapping is configured, then the topic ID -> (topic_name,topic_type) mapping is queried over the serial port when `ros2_to_serial_bridge` starts.  Dynamic topic mapping can be requested by setting the `dynamic_serial_mapping_ms` key in the YAML configuration file to 0 or greater.  If 0, then `ros2_to_serial_bridge` will try "forever" to get the mapping via the serial port.  If greater than 0, then `ros2_to_serial_bridge` will try for that many milliseconds to get the mapping.  If it doesn't get it in that time, it quits the program.  If dynamic topic mapping is configured, then any static mapping in the YAML configuration file is completely ignored.
 
-## Supported types
+### Supported types
 
 The message types that the bridge supports must be known at compile time. The CMake variable `ROS2_SERIAL_PKGS` is used to add entire packages to the list of supported messages; all messages in the particular package will be built into the bridge. For example, to add in all messages in `std_msgs`, `std_msgs` would be added to the `ROS2_SERIAL_PKGS` variable using this arguments: `--cmake-args -DROS2_SERIAL_PKGS="sensor_msgs"`. If you want to add more packages you can use `;` to separate them: `--cmake-args -DROS2_SERIAL_PKGS="sensor_msgs;px4_msgs"`. Each package type added to the bridge consumes more compile time and more on-disk space. The memory usage depends on which message types are setup during the topic mapping phase above. Note that if the topic mapping specifies a type that has not been compiled into `ros2_to_serial_bridge`, that topic will just be ignored.
 
-## Using the code in this repository
+### Using the code in this repository
 
-### Build
+#### Build
 
 1.  Install ROS 2 (https://index.ros.org/doc/ros2/Installation/).
 1.  Source the ROS 2 installation (either `/opt/ros/<rosdistro>/setup.bash` if installing from binaries, or `ros2_ws/install/setup.bash` if building from source):
@@ -66,7 +100,7 @@ The message types that the bridge supports must be known at compile time. The CM
 1.  Source the local workspace:
     1.  `source install/local_setup.bash`
 
-### Run
+#### Run
 
 In terminal one:
 
@@ -86,7 +120,7 @@ Also in terminal three, send some data from the ROS 2 network that will end up o
 
 `ros2 topic pub -1 /another std_msgs/String "{data: 'hello'}"`
 
-## Serial Framing Protocol
+### Serial Framing Protocol
 
 The current `ros2_to_serial_bridge` features two selectable serial protocols for transferring data over the serial link.  Both are intended to be simple and low overhead for the other end of the serial port to encode and decode (potentially a microcontroller).  The two supported protocols are:
 
@@ -106,7 +140,7 @@ COBS(|topic_ID|len_high|len_low|CRC_high|CRC_low|payload_start...payload_end|)0x
 
 The COBS "stuffing" maps the 0-255 range of the octets into 1-255, leaving 0 available as an end-of-frame marker; see https://en.wikipedia.org/wiki/Consistent_Overhead_Byte_Stuffing .  With this protocol, it is easy to jump into the "middle" of a stream, and only lose one message; it is also possible to tunnel COBS over COBS.  Unless compatibility with PX4 is required, this protocol should be preferred.
 
-## YAML Config
+### YAML Config
 
 The YAML configuration file for the `ros2_to_serial_bridge` has a number of parameters that control how the bridge works:
 
@@ -132,7 +166,7 @@ The YAML configuration file for the `ros2_to_serial_bridge` has a number of para
 
 * topics - The list of topics to use if dynamic_serial_mapping_ms is less than 0.  See [Static YAML configuration](#Static-YAML-configuration) for more information.
 
-## Code generation for the bridge
+### Code generation for the bridge
 
 The way that the compile process generates code for the bridge is slightly complicated, so this section aims to shed some light on that process.
 
