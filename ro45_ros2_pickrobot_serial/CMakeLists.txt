@@ -20,8 +20,10 @@ find_package(rclcpp_components REQUIRED)
 
 find_package(Python3 REQUIRED COMPONENTS Interpreter)
 
+
 include_directories(include "${CMAKE_CURRENT_BINARY_DIR}")
 
+set(ROS2_SERIAL_PKGS ro45_portalrobot_interfaces)
 
 find_package(ro45_portalrobot_interfaces REQUIRED)
 if (ROS2_SERIAL_PKGS)
