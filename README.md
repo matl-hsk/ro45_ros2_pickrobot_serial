@@ -25,6 +25,10 @@ Microcontroller (Pickrobot)
 1. Launch the nodes using one of the provided launch files
   - `ros2 launch ro45_ros2_pickrobot_serial launch_nodes.py` to launch two separate nodes for the communication to and from the robot.
   - `ros2 launch ro45_ros2_pickrobot_serial launch_in_container.py` to launch both within a container.
+  
+  This launches
+  - the node `command_subscriber` which subscribes to the topic `robot_command` of type `ro45_portalrobot_interfaces/msg/RobotCmd`,
+  - the node `position_publisher` which publishes the topic `robot_position` of type `ro45_portalrobot_interfaces/msg/RobotPos`.
 
 --- 
 --- 
