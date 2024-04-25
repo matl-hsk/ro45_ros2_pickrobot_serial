@@ -13,6 +13,13 @@ Microcontroller (Pickrobot)
 - [code for pickrobot actuators](https://github.com/matl-hsk/PickRobotRosSerial)
 - [code for pickrobot sensors](https://github.com/matl-hsk/PlotbotEncoderRosSerial)
 
+### Remarks
+1. In case the ESP32 /ESP 8266 is not detected (ttyUSB0 port) this is since the signature of the nodeMCU board clashes with another device. In this case run the command  
+`sudo apt-get remove -y brltty`
+2. The user must be in the group dialout to have access to the serial interfaces. This can be checked with the command `groups`. If `dialout` is not in the list add your user to this group using the command  
+`sudo usermod -a -G dialout YOURUSERNAME`
+
+
 
 ### Build
 1. Make sure the dependencies are met, in particular the package `ro45_portalrobot_interfaces` is in your ROS2 workspace.
